@@ -183,6 +183,37 @@
       background: rgba(255, 255, 255, 0.15);
     }
 
+    .gpu-notice {
+      display: none;
+      background: rgba(251, 191, 36, 0.07);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .gpu-notice-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fbbf24;
+      margin-bottom: 10px;
+    }
+
+    .gpu-notice p {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .gpu-notice p strong {
+      color: #fbbf24;
+    }
+
     .footer {
       margin-top: 32px;
       font-size: 13px;
@@ -205,6 +236,15 @@
       }
 
       .credit-note {
+        font-size: 13px;
+      }
+
+      .gpu-notice {
+        padding: 16px 18px;
+        border-radius: 12px;
+      }
+
+      .gpu-notice p {
         font-size: 13px;
       }
 
@@ -268,6 +308,18 @@
       운영 시간에 다시 방문해 주시면 감사하겠습니다.
     </p>
 
+    <div class="gpu-notice" id="gpuNotice">
+      <div class="gpu-notice-header">
+        <span>⚡</span> 서버 시작 중일 수 있습니다
+      </div>
+      <p id="gpuNoticeText">
+        이 서버는 <strong>GCP GPU 인스턴스</strong>로 운영됩니다.<br>
+        GPU 자원 수요가 많은 시간대에는 할당이 지연되어
+        서버가 늦게 켜지는 경우가 있습니다.<br>
+        <strong id="gpuRetryTime"></strong>에 다시 확인해 주시면 감사하겠습니다.
+      </p>
+    </div>
+
     <div class="card">
       <div class="card-title">포트폴리오 서버 운영 시간</div>
       <div class="schedule">
@@ -302,5 +354,31 @@
     <p class="footer">KST (UTC+9) 기준</p>
   </div>
 
+  <script>
+    (function () {
+      const now = new Date();
+      const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+      const OPENING_HOUR = 9;
+      const CLOSING_HOUR = 12;
+      const day = kst.getUTCDay(); // 0=일, 1=월 ... 5=금, 6=토
+      const minutes = kst.getUTCHours() * 60 + kst.getUTCMinutes();
+      const isWeekday = day >= 1 && day <= 5;
+      const isOperatingHours = minutes >= OPENING_HOUR * 60 && minutes < CLOSING_HOUR * 60;
+
+      if (isWeekday && isOperatingHours) {
+        const nextHour = kst.getUTCHours() + 1;
+        let retryText;
+        if (nextHour >= CLOSING_HOUR) {
+          retryText = '내일 오전 ' + OPENING_HOUR + '시 이후';
+        } else {
+          const period = nextHour < 12 ? '오전' : '오후';
+          const displayHour = nextHour > 12 ? nextHour - 12 : nextHour;
+          retryText = period + ' ' + displayHour + '시 이후';
+        }
+        document.getElementById('gpuRetryTime').textContent = retryText;
+        document.getElementById('gpuNotice').style.display = 'block';
+      }
+    })();
+  </script>
 </body>
 </html>
