@@ -456,7 +456,9 @@
         retryText = '다음 평일 오전 ' + OPENING_HOUR + '시 이후';
       }
       document.getElementById('gpuRetryTime').textContent = retryText;
-      document.getElementById('gpuNotice').style.display = 'block';
+      if (isWeekday && isOperatingHours) {
+        document.getElementById('gpuNotice').style.display = 'block';
+      }
     })();
 
     (function () {
