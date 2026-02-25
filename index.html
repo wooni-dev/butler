@@ -226,7 +226,7 @@
       line-height: 1.7;
       margin: 12px 0 0;
       overflow: hidden;
-      transition: height 1s ease, opacity 1s ease;
+      transition: height 1s ease, opacity 1s ease, margin-top 1s ease;
     }
 
     .region-notice p strong {
@@ -472,26 +472,32 @@
         if (details.open) {
           p.style.height = p.scrollHeight + 'px';
           p.style.opacity = '1';
+          p.style.marginTop = '12px';
           requestAnimationFrame(function () {
             p.style.height = '0';
             p.style.opacity = '0';
+            p.style.marginTop = '0';
           });
           p.addEventListener('transitionend', function () {
             details.removeAttribute('open');
             p.style.height = '';
             p.style.opacity = '';
+            p.style.marginTop = '';
           }, { once: true });
         } else {
           details.setAttribute('open', '');
           const targetHeight = p.scrollHeight;
           p.style.height = '0';
           p.style.opacity = '0';
+          p.style.marginTop = '0';
           requestAnimationFrame(function () {
             p.style.height = targetHeight + 'px';
             p.style.opacity = '1';
+            p.style.marginTop = '12px';
           });
           p.addEventListener('transitionend', function () {
             p.style.height = '';
+            p.style.marginTop = '';
           }, { once: true });
         }
       });
