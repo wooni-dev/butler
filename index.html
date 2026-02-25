@@ -437,18 +437,26 @@
       const isWeekday = day >= 1 && day <= 5;
       const isOperatingHours = minutes >= OPENING_HOUR * 60 && minutes < CLOSING_HOUR * 60;
 
-      if (!(isWeekday && isOperatingHours)) {
-        let retryText;
-        if (isWeekday && minutes < OPENING_HOUR * 60) {
-          // 평일 오전 9시 이전
-          retryText = '오늘 오전 ' + OPENING_HOUR + '시 이후';
+      let retryText;
+      if (isWeekday && isOperatingHours) {
+        // 평일 운영 시간 중: 다음 시간 안내
+        const nextHour = kst.getUTCHours() + 1;
+        if (nextHour >= CLOSING_HOUR) {
+          retryText = '내일 오전 ' + OPENING_HOUR + '시 이후';
         } else {
-          // 평일 18시 이후 또는 주말
-          retryText = '다음 평일 오전 ' + OPENING_HOUR + '시 이후';
+          const period = nextHour < 12 ? '오전' : '오후';
+          const displayHour = nextHour > 12 ? nextHour - 12 : nextHour;
+          retryText = period + ' ' + displayHour + '시 이후';
         }
-        document.getElementById('gpuRetryTime').textContent = retryText;
-        document.getElementById('gpuNotice').style.display = 'block';
+      } else if (isWeekday && minutes < OPENING_HOUR * 60) {
+        // 평일 오전 9시 이전
+        retryText = '오늘 오전 ' + OPENING_HOUR + '시 이후';
+      } else {
+        // 평일 18시 이후 또는 주말
+        retryText = '다음 평일 오전 ' + OPENING_HOUR + '시 이후';
       }
+      document.getElementById('gpuRetryTime').textContent = retryText;
+      document.getElementById('gpuNotice').style.display = 'block';
     })();
 
     (function () {
