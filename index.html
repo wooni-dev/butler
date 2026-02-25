@@ -183,6 +183,56 @@
       background: rgba(255, 255, 255, 0.15);
     }
 
+    .region-notice {
+      background: rgba(56, 189, 248, 0.07);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .region-notice-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #38bdf8;
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+    }
+
+    .region-notice-toggle::-webkit-details-marker {
+      display: none;
+    }
+
+    .region-notice-toggle .toggle-arrow {
+      margin-left: auto;
+      font-size: 11px;
+      color: #38bdf8;
+      opacity: 0.7;
+      transition: transform 0.2s;
+    }
+
+    details.region-notice[open] .toggle-arrow {
+      transform: rotate(180deg);
+    }
+
+    .region-notice p {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.7;
+      margin: 12px 0 0;
+      overflow: hidden;
+      transition: height 1s ease, opacity 1s ease;
+    }
+
+    .region-notice p strong {
+      color: #38bdf8;
+    }
+
     .gpu-notice {
       display: none;
       background: rgba(251, 191, 36, 0.07);
@@ -237,6 +287,16 @@
 
       .credit-note {
         font-size: 13px;
+      }
+
+      .region-notice {
+        padding: 16px 18px;
+        border-radius: 12px;
+      }
+
+      .region-notice p {
+        font-size: 13px;
+        margin-top: 10px;
       }
 
       .gpu-notice {
@@ -308,6 +368,18 @@
       운영 시간에 다시 방문해 주시면 감사하겠습니다.
     </p>
 
+    <details class="region-notice">
+      <summary class="region-notice-toggle">
+        <span>🌏</span> 서버 리전 변경 안내
+        <svg class="toggle-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,4 6,8 10,4"/></svg>
+      </summary>
+      <p>
+        최근 <strong>GCP 서울 리전</strong>의 GPU 수요가 급증하여 할당이 어려워졌습니다.<br>
+        안정적인 운영을 위해 <strong>타이완 리전</strong>으로 이전하였습니다.<br>
+        이로 인해 접속 속도가 다소 느릴 수 있는 점 양해 부탁드립니다. 🙏
+      </p>
+    </details>
+
     <div class="gpu-notice" id="gpuNotice">
       <div class="gpu-notice-header">
         <span>⚡</span> 서버 시작 중일 수 있습니다
@@ -325,7 +397,7 @@
       <div class="schedule">
         <span class="schedule-icon">&#x1F4C5;</span>
         <span class="schedule-label">평일 (월~금)</span>
-        <span class="schedule-time">AM 09:00 ~ 12:00</span>
+        <span class="schedule-time">AM 09:00 ~ PM 06:00</span>
       </div>
       <div class="schedule">
         <span class="schedule-icon">🌙</span>
@@ -359,25 +431,60 @@
       const now = new Date();
       const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
       const OPENING_HOUR = 9;
-      const CLOSING_HOUR = 12;
+      const CLOSING_HOUR = 18;
       const day = kst.getUTCDay(); // 0=일, 1=월 ... 5=금, 6=토
       const minutes = kst.getUTCHours() * 60 + kst.getUTCMinutes();
       const isWeekday = day >= 1 && day <= 5;
       const isOperatingHours = minutes >= OPENING_HOUR * 60 && minutes < CLOSING_HOUR * 60;
 
-      if (isWeekday && isOperatingHours) {
-        const nextHour = kst.getUTCHours() + 1;
+      if (!(isWeekday && isOperatingHours)) {
         let retryText;
-        if (nextHour >= CLOSING_HOUR) {
-          retryText = '내일 오전 ' + OPENING_HOUR + '시 이후';
+        if (isWeekday && minutes < OPENING_HOUR * 60) {
+          // 평일 오전 9시 이전
+          retryText = '오늘 오전 ' + OPENING_HOUR + '시 이후';
         } else {
-          const period = nextHour < 12 ? '오전' : '오후';
-          const displayHour = nextHour > 12 ? nextHour - 12 : nextHour;
-          retryText = period + ' ' + displayHour + '시 이후';
+          // 평일 18시 이후 또는 주말
+          retryText = '다음 평일 오전 ' + OPENING_HOUR + '시 이후';
         }
         document.getElementById('gpuRetryTime').textContent = retryText;
         document.getElementById('gpuNotice').style.display = 'block';
       }
+    })();
+
+    (function () {
+      const details = document.querySelector('details.region-notice');
+      const summary = details.querySelector('summary');
+      const p = details.querySelector('p');
+
+      summary.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        if (details.open) {
+          p.style.height = p.scrollHeight + 'px';
+          p.style.opacity = '1';
+          requestAnimationFrame(function () {
+            p.style.height = '0';
+            p.style.opacity = '0';
+          });
+          p.addEventListener('transitionend', function () {
+            details.removeAttribute('open');
+            p.style.height = '';
+            p.style.opacity = '';
+          }, { once: true });
+        } else {
+          details.setAttribute('open', '');
+          const targetHeight = p.scrollHeight;
+          p.style.height = '0';
+          p.style.opacity = '0';
+          requestAnimationFrame(function () {
+            p.style.height = targetHeight + 'px';
+            p.style.opacity = '1';
+          });
+          p.addEventListener('transitionend', function () {
+            p.style.height = '';
+          }, { once: true });
+        }
+      });
     })();
   </script>
 </body>
